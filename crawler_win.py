@@ -80,7 +80,6 @@ def scrollTimelinePage(current_url, userid):
         failed_file.write(url)
         failed_file.write(str(Exception)+': '+str(e))
         failed_file.close()
-
     try:
         # set default scrolllimit
         scrolllimit = 10
@@ -107,7 +106,6 @@ def scrollTimelinePage(current_url, userid):
                 else:
                     print "stop"
                     stop = True
-
     except socket.timeout:
         print "Exception Timeout: " + url
         socket_timeout_file = open('socket_timeout.txt', 'a')
@@ -158,16 +156,16 @@ if __name__ == '__main__':
     samples = open('D:\githubrepository\FBCrawl\piTEDtranslate.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
-    # for idx in range(1, len(readfile)):
 
-    startrow = 1
+    # filter unique user
+    startrow = 2
     endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
-        userid = readfile[idx].split(',')[1]
+        getuserid = readfile[idx].split(',')[1]
 
-        if userid not in urls:
-            urls.append(userid)
+        if getuserid not in urls:
+            urls.append(getuserid)
 
     print "unique user : ", len(urls)
 
@@ -178,8 +176,8 @@ if __name__ == '__main__':
     driver = webdriver.Firefox()
     # driver = webdriver.Chrome('C:/chromedriver') # works in windows
     # Set the timeout for the driver and socket.
-    # driver.set_page_load_timeout(30)
-    # socket.setdefaulttimeout(20)
+    driver.set_page_load_timeout(30)
+    socket.setdefaulttimeout(20)
 
     # First, login.
     driver.get("https://www.facebook.com/login.php")
@@ -197,9 +195,7 @@ if __name__ == '__main__':
     if 'login' in driver.current_url:
         driver.close()
 
-    # kok ga berhenti ketika semua link uda dibuka
-
-    # visit the url
+    # visit the url based on urls
     for userid in urls:
         url_cal += 1
         time.sleep(3)
@@ -220,5 +216,8 @@ if __name__ == '__main__':
         current_url = driver.current_url
 
         scrollTimelinePage(current_url, userid)
+        continue
         scrollLikePage(current_url, userid)
+        continue
         scrollAboutPage(current_url, userid)
+        continue
