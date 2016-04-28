@@ -22,6 +22,16 @@ def directoryexist(userid):
     directoryIsExist = True
     return directoryIsExist
 
+"""
+def fileexist(filename):
+    idx = 1
+    if not os.path.isfile(filename):
+        # buat file dg nama filename tsb
+        os.makedirs(filename)
+    else:
+        # rename file dg nama filename tsb + index
+    return
+"""
 def savepage(type, userid):
     # directory is based on userid
     directory = userid
@@ -43,6 +53,7 @@ def scrollLikePage(current_url, userid):
         time.sleep(0.1)
         background.send_keys(Keys.SPACE)
     savepage('likes', userid)
+    # rlog(userid, likes_url)
 
 def scrollTimelinePage(current_url, userid):
     # browse the TIMELINE based on scrolllimit
@@ -63,25 +74,41 @@ def scrollTimelinePage(current_url, userid):
         failed_file.write(str(Exception)+': '+str(e))
         failed_file.close()
 
+    found = False
     try:
         # set default scrolllimit
-        scrolllimit = 2
-        found = False
-        yearlimit = '2016'
+        scrolllimit = 10
+        yearlimit = '2015'
+
         while found == False:
             for i in range(1, scrolllimit):
-                 time.sleep(0.1)
-                 background.send_keys(Keys.SPACE)
+                time.sleep(0.1)
+                background.send_keys(Keys.SPACE)
 
-            tag = driver.find_elements_by_tag_name('abbr')
-            for x in range(0, tag.__len__()):
+            """
+            # limit
+            <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_3_0_yearoverview" data-referrer="u_jsonp_3_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2015</div></div></div>
+            <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_4_0_yearoverview" data-referrer="u_jsonp_4_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2014</div></div></div>
+            """
+            # tag = driver.find_elements_by_tag_name('abbr')
+            tag = driver.find_elements_by_xpath('//*[@id="u_jsonp_4_0_yearoverview"]/div/div')
+            print tag.__len__()
+            limit = tag.__len__()
+            print "continue"
+            for x in range(0, limit):
                 title = tag[x].get_attribute("title")
                 if yearlimit in title :
                     found = True
-                    limit = 0
+                    limit = x
+                    scrolllimit = 0
                 else:
                     found = False
-                    limit += 5
+                    limit = tag.__len__()
+                    scrolllimit += 1
+
+                print title
+                print found
+
     except socket.timeout:
         print "Exception Timeout: " + url
         socket_timeout_file = open('socket_timeout.txt', 'a')
@@ -89,12 +116,21 @@ def scrollTimelinePage(current_url, userid):
         socket_timeout_file.close()
 
     savepage('timeline', userid)
+    # rlog(userid, url)
 
 def scrollAboutPage(current_url, userid):
     # browse ABOUT page
     # driver.find_element_by_xpath('//*[@id="u_0_r"]/div/a[2]').click()
     # likes_url = current_url+'/about'
     # ABOUT
+    username = current_url.split('/')[3]
+    about_url = 'https://m.facebook.com/'+username+'/about'
+    # open page based on url
+    driver.get(about_url)
+    # save webpage
+    savepage("about", userid)
+
+    """
     about = ['education', 'overview', 'living', 'contact-info', 'relationship', 'bio', 'year-overviews']
     for sectionname in about:
         about_url = current_url+'/about?section=%s&pnref=about' %(sectionname)
@@ -102,6 +138,20 @@ def scrollAboutPage(current_url, userid):
         driver.get(about_url)
         # save webpage
         savepage(sectionname, userid)
+        # rlog(userid, about_url)
+    """
+
+def rlog(userid, link):
+    i = 1
+    date = time.strftime('%Y%m%d',time.localtime(time.time()))
+    # Record the start time.
+    starttime = datetime.datetime.now()
+    filename = "log_"+date
+    # getfilename = fileexist(filename)
+    file = open(filename, "a")
+    file.write(userid+','+link+','+time)
+    file.close()
+    return True
 
 if __name__ == '__main__':
     reload(sys)
@@ -109,10 +159,14 @@ if __name__ == '__main__':
 
     # get userid from .csv file
     urls = []
-    samples = open('../FBCrawl/piTEDtranslate1.csv','r')
+    samples = open('../FBCrawl/piTEDtranslate.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
-    for idx in range(1, len(readfile)):
+    # for idx in range(1, len(readfile)):
+
+    startrow = 10
+    endrow = 11
+    for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
         urls.append(readfile[idx].split(',')[1])
     url_num = readfile.__len__()
@@ -131,14 +185,14 @@ if __name__ == '__main__':
 
     # First, login.
     driver.get("https://www.facebook.com/login.php")
-    time.sleep(3)
+    # time.sleep(3)
     driver.find_element_by_id("email").clear()
     driver.find_element_by_id("email").send_keys("dev.oktaviani.dewi@gmail.com")
     driver.find_element_by_id("pass").clear()
     driver.find_element_by_id("pass").send_keys("zGq-8ev-Z7e-vYh")
     driver.find_element_by_id("loginbutton").click()
     # Better wait for several seconds.
-    time.sleep(3)
+    # time.sleep(3)
 
     # Maybe the login failed. It may turn to the login page again.
     # you may need to load again.
@@ -160,15 +214,15 @@ if __name__ == '__main__':
         # Record the start time.
         starttime = datetime.datetime.now()
         # Wait 3 seconds for the browser loading the Webpage.
-        time.sleep(3)
+        # time.sleep(3)
 
         driver.get(url)
         # cari scc selector yg ada di halaman likes. supaya bisa discroll
         # tabs = ['timeline', 'likes', 'about']
         current_url = driver.current_url
 
-        scrollLikePage(current_url, userid)
-        scrollAboutPage(current_url, userid)
+        # scrollLikePage(current_url, userid)
+        # scrollAboutPage(current_url, userid)
         scrollTimelinePage(current_url, userid)
 
 
