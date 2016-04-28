@@ -160,14 +160,16 @@ if __name__ == '__main__':
     baseurl = 'www.facebook.com/'
     # for idx in range(1, len(readfile)):
 
-    startrow = 15
-    endrow = 20
+    startrow = 1
+    endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
-        urls.append(readfile[idx].split(',')[1])
-    url_num = readfile.__len__()
-    print "urls: " + str(url_num)
-    print "maks: " + str(url_num)
+        userid = readfile[idx].split(',')[1]
+
+        if userid not in urls:
+            urls.append(userid)
+
+    print "unique user : ", len(urls)
 
     # url_cal for record how many url already visit in this login
     url_cal = 0
