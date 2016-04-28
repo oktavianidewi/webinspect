@@ -4,7 +4,6 @@ import socket
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
 import datetime
 import time
 # from selenium.webdriver.support.ui import WebDriverWait
@@ -61,6 +60,17 @@ def scrollTimelinePage(current_url, userid):
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
 
+    """
+        # limit
+        # kalo g nemu yg tahun 2014 gimana?
+        <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_3_0_yearoverview" data-referrer="u_jsonp_3_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2015</div></div></div>
+        <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_4_0_yearoverview" data-referrer="u_jsonp_4_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2014</div></div></div>
+        _4-u2 _2uo1 _3-95 _4-u8
+        //*[@id="u_jsonp_9_0_yearoverview"]/div/div -> tahun 2012
+        //*[@id="u_jsonp_8_0_yearoverview"]/div/div
+
+    """
+
     # Prevent invalid page.
     try:
         driver.find_element_by_id('fb-timeline-cover-name')
@@ -70,17 +80,6 @@ def scrollTimelinePage(current_url, userid):
         failed_file.write(url)
         failed_file.write(str(Exception)+': '+str(e))
         failed_file.close()
-
-        """
-            # limit
-            # kalo g nemu yg tahun 2014 gimana?
-            <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_3_0_yearoverview" data-referrer="u_jsonp_3_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2015</div></div></div>
-            <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_4_0_yearoverview" data-referrer="u_jsonp_4_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2014</div></div></div>
-            _4-u2 _2uo1 _3-95 _4-u8
-            //*[@id="u_jsonp_9_0_yearoverview"]/div/div -> tahun 2012
-            //*[@id="u_jsonp_8_0_yearoverview"]/div/div
-
-        """
 
     try:
         # set default scrolllimit
@@ -120,9 +119,6 @@ def scrollTimelinePage(current_url, userid):
 
 def scrollAboutPage(current_url, userid):
     # browse ABOUT page
-    # driver.find_element_by_xpath('//*[@id="u_0_r"]/div/a[2]').click()
-    # likes_url = current_url+'/about'
-    # ABOUT
     username = current_url.split('/')[3]
     about_url = 'https://m.facebook.com/'+username+'/about'
     # open page based on url
@@ -224,51 +220,3 @@ if __name__ == '__main__':
         scrollTimelinePage(current_url, userid)
         scrollLikePage(current_url, userid)
         scrollAboutPage(current_url, userid)
-
-
-        """
-        # find *Likes and *Comments
-        """
-        """
-        try:
-            # First find all the "*Likes *Comments".
-            post_attribute_buttons = driver.find_elements_by_xpath("//div[@class='_3ccb']//a[@class='UFIBlingBox uiBlingBox feedbackBling UFIBlingBoxRevised']")
-            # Then click all the "*Likes *Comments".
-            for post_attribute_button in post_attribute_buttons:
-                print post_attribute_button.text
-                post_attribute_button.click()
-            # Second find all the "View * more Comments".
-            post_attribute_button_view_more_comments = driver.find_elements_by_xpath("//div[@class='_3ccb']"
-                                                                                             "//li[@class='UFIRow UFIPagerRow UFIComponent UFIFirstCommentComponent']"
-                                                                                             "//a[@class='UFIPagerLink']")
-            # Then click all the "View * more Comments".
-            for post_attribute_button_view_more_comment in post_attribute_button_view_more_comments:
-                print post_attribute_button_view_more_comment.text
-                post_attribute_button_view_more_comment.click()
-        except Exception, e:
-            print "Exception: " + url
-            exception_file = open('commentclick_exception.txt', 'a')
-            exception_file.write(url)
-            exception_file.write(str(Exception)+': '+str(e))
-            exception_file.close()
-            continue
-        """
-        """
-        # save webpage on targeted folder
-        try:
-            target_name = str(driver.find_element_by_id("fb-timeline-cover-name").text)
-            if '\n' in target_name:
-                target_name = target_name.split('\n')[0]
-            page_html = driver.page_source
-            # page_html_file = open('all_2015/'+target_name+' post.html', 'w')
-            page_html_file = open(directory+'/'+target_name+'_post.html', 'w')
-            page_html_file.write(page_html)
-            page_html_file.close()
-        except Exception, e:
-            print "File Exception: " + url
-            exception_file = open('file_exception.txt', 'a')
-            exception_file.write(url)
-            exception_file.write(str(Exception)+': '+str(e))
-            exception_file.close()
-            continue
-        """
