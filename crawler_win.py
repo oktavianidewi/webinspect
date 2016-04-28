@@ -44,11 +44,15 @@ def scrollLikePage(current_url, userid):
     # scroll until got 100 top-likes
     likes_url = current_url+'/likes'
     driver.get(likes_url)
-    background = driver.find_element_by_css_selector("body")
-    for i in range(1, 20):
-        time.sleep(0.1)
-        background.send_keys(Keys.SPACE)
-    savepage('likes', userid)
+    time.sleep(1)
+    current_url_after_redirect = driver.current_url
+
+    if current_url_after_redirect == likes_url :
+        background = driver.find_element_by_css_selector("body")
+        for i in range(1, 20):
+            time.sleep(0.7)
+            background.send_keys(Keys.SPACE)
+        savepage('likes', userid)
     # rlog(userid, likes_url)
 
 def scrollTimelinePage(current_url, userid):
@@ -82,13 +86,13 @@ def scrollTimelinePage(current_url, userid):
         failed_file.close()
     try:
         # set default scrolllimit
-        scrolllimit = 10
+        scrolllimit = 5
         stop = False
         yearlimit = 2014
 
         while stop == False:
             for i in range(1, scrolllimit):
-                time.sleep(0.1)
+                time.sleep(0.3)
                 background.send_keys(Keys.SPACE)
             tag = driver.find_elements_by_tag_name('abbr')
 
@@ -135,15 +139,16 @@ def scrollAboutPage(current_url, userid):
         # rlog(userid, about_url)
     """
 
-def rlog(userid, link):
-    i = 1
+def rlog(i, userid):
     date = time.strftime('%Y%m%d',time.localtime(time.time()))
     # Record the start time.
     starttime = datetime.datetime.now()
     filename = "log_"+date
     # getfilename = fileexist(filename)
-    file = open(filename, "a")
-    file.write(userid+','+link+','+time)
+    teks = "%s,%s,%s" % (i,userid,time)
+    # teks = str(i)+','+str(userid)+','str(time)
+    file = open(filename, "r+")
+    file.write(teks)
     file.close()
     return True
 
@@ -153,12 +158,13 @@ if __name__ == '__main__':
 
     # get userid from .csv file
     urls = []
-    samples = open('D:\githubrepository\FBCrawl\piTEDtranslate.csv','r')
+    samples = open('../FBCrawl/piTEDtranslate.csv','r')
+    # samples = open('D:\githubrepository\FBCrawl\piTEDtranslate.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 2
+    startrow = 8
     endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
@@ -216,8 +222,7 @@ if __name__ == '__main__':
         current_url = driver.current_url
 
         scrollTimelinePage(current_url, userid)
-        continue
         scrollLikePage(current_url, userid)
-        continue
         scrollAboutPage(current_url, userid)
+        rlog(startrow, userid, )
         continue
