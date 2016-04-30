@@ -68,7 +68,6 @@ def scrollTimelinePage(current_url, userid):
     background = driver.find_element_by_css_selector("body")
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
-    scroll_start_time = time.time()
 
     # Prevent invalid page.
     try:
@@ -82,12 +81,13 @@ def scrollTimelinePage(current_url, userid):
         scrolllimit = 4
         stop = False
         yearlimit = 2015
-        delay = 100
+        # delay = 100
+        sleeptime = 3
         while stop == False:
             # do scrolling
             for i in range(1, scrolllimit):
                 background.send_keys(Keys.SPACE)
-            time.sleep(2)
+            time.sleep(sleeptime)
             """
             <img width="16" height="11" alt="" src="https://static.xx.fbcdn.net/rsrc.php/v2/yb/r/GsNJNwuI-UM.gif" class="ptl loadingIndicator img">
             """
@@ -105,20 +105,10 @@ def scrollTimelinePage(current_url, userid):
                 print yearlimit <= tahun
                 if yearlimit <= tahun:
                     stop = False
-                    scrolllimit += 1
+                    # sleeptime += 2
                 else:
                     stop = True
-
-            # WebDriverWait(driver, delay).until(EC.presence_of_element_located(driver.find_element_by_class_name('.loadingIndicator')))
-            print driver.find_element_by_class_name('.loadingIndicator')
-            """
-            finally:
-                rlog('timeline','too long to response',startrow, userid)
-                # driver.quit()
-            """
-
-
-        savepage('timeline', userid)
+            savepage('timeline', userid)
     except socket.timeout:
         rlog('timeline','socket timeout',startrow, userid)
 
@@ -170,14 +160,15 @@ if __name__ == '__main__':
 
     # get userid from .csv file
     urls = []
-    # samples = open('../FBCrawl/piTEDtranslate.csv','r')
-    samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
+    samples = open('../FBCrawl/piTEDtranslate.csv','r')
+    # samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 8+5+1+1+1+3
-    endrow = readfile.__len__()
+    startrow = 8+5+1+1+1+3+1
+    endrow = startrow + 2
+    # endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
         getuserid = readfile[idx].split(',')[1]
@@ -211,7 +202,6 @@ if __name__ == '__main__':
 
     # visit the url based on urls
     for userid in urls:
-        url_cal += 1
         time.sleep(1)
 
         url = baseurl+userid
@@ -232,14 +222,12 @@ if __name__ == '__main__':
             rlog('timeline','success',startrow, userid)
         except Exception, e:
             rlog('timeline','failed',startrow, userid)
-            continue
 
         try:
             scrollLikePage(current_url, userid)
             rlog('like','success',startrow, userid)
         except Exception, e:
             rlog('like','failed',startrow, userid)
-            continue
 
         try:
             scrollAboutPage(current_url, userid)
