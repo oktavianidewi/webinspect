@@ -57,9 +57,7 @@ def scrollLikePage(current_url, userid):
 
 def scrollTimelinePage(current_url, userid):
     # browse the TIMELINE based on scrolllimit
-    # Go to the target's timeline Webpage.
     driver.get(url)
-    # For scroll the page: send_keys(Keys.SPACE)
     background = driver.find_element_by_css_selector("body")
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
@@ -86,17 +84,30 @@ def scrollTimelinePage(current_url, userid):
         failed_file.close()
     try:
         # set default scrolllimit
-        scrolllimit = 5
+        scrolllimit = 1
         stop = False
-        yearlimit = 2014
+        yearlimit = 2015
 
         while stop == False:
             for i in range(1, scrolllimit):
-                time.sleep(0.3)
                 background.send_keys(Keys.SPACE)
-            tag = driver.find_elements_by_tag_name('abbr')
+                time.sleep(10)
+            # tag = driver.find_elements_by_tag_name('abbr')
+            # tag = driver.find_elements_by_xpath('//*[@id="u_0_1b"]/div[2]/div[1]/div[3]/div/div/div[2]/div/div/div[2]/div')
+            tag = driver.find_elements_by_css_selector('#timestampContent')
+            print tag.__len__()
 
+            """
+            <abbr title="Sunday, November 22, 2015 at 5:21pm" data-utime="1448241677" data-shorten="1" class="_5ptz"><span id="js_2" class="timestampContent">November 22, 2015</span></abbr>
+            another abbr
+            <abbr data-shorten="true" data-utime="1448212893" title="Monday, November 23, 2015 at 2:21am" class="livetimestamp">November 23, 2015 at 2:21am</abbr>
+            <abbr data-shorten="true" data-utime="1448216339" title="Monday, November 23, 2015 at 3:18am" class="livetimestamp">November 23, 2015 at 3:18am</abbr>
+
+            """
             for x in range(0, tag.__len__()):
+                # pengen tau apa aja isinya abbr
+                print tag[x].get_attribute("title")
+
                 postyear = (tag[x].get_attribute("title")).split(" ")
                 if len(postyear) > 4:
                     tahun = int(postyear[3])
@@ -104,12 +115,13 @@ def scrollTimelinePage(current_url, userid):
                 # quit()
                 print yearlimit <= tahun
                 if yearlimit <= tahun:
-                    print "lanjut"
+                    # print "lanjut"
                     stop = False
                     scrolllimit += 1
                 else:
-                    print "stop"
+                    # print "stop"
                     stop = True
+
     except socket.timeout:
         print "Exception Timeout: " + url
         socket_timeout_file = open('socket_timeout.txt', 'a')
@@ -143,7 +155,7 @@ def rlog(i, userid):
     date = time.strftime('%Y%m%d',time.localtime(time.time()))
     # Record the start time.
     starttime = datetime.datetime.now()
-    filename = "log_"+date
+    filename = "log_"+date+".txt"
     # getfilename = fileexist(filename)
     teks = "%s,%s,%s" % (i,userid,time)
     # teks = str(i)+','+str(userid)+','str(time)
@@ -164,8 +176,9 @@ if __name__ == '__main__':
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 8
-    endrow = readfile.__len__()
+    startrow = 22+1+1+1+1+1+1+1
+    # endrow = readfile.__len__()
+    endrow = startrow+1
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
         getuserid = readfile[idx].split(',')[1]
@@ -175,12 +188,8 @@ if __name__ == '__main__':
 
     print "unique user : ", len(urls)
 
-    # url_cal for record how many url already visit in this login
-    url_cal = 0
-
     # driver init
     driver = webdriver.Firefox()
-    # driver = webdriver.Chrome('C:/chromedriver') # works in windows
     # Set the timeout for the driver and socket.
     driver.set_page_load_timeout(30)
     socket.setdefaulttimeout(20)
@@ -203,16 +212,12 @@ if __name__ == '__main__':
 
     # visit the url based on urls
     for userid in urls:
-        url_cal += 1
         time.sleep(3)
-
         url = baseurl+userid
         print(url)
         # you should know how long you scroll in this timeline - for set the timeout
         # Print the start time.
         print time.strftime('%Y-%m-%d %A %X %Z',time.localtime(time.time()))
-        # Record the start time.
-        starttime = datetime.datetime.now()
         # Wait 3 seconds for the browser loading the Webpage.
         # time.sleep(3)
 
