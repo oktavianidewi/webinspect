@@ -124,16 +124,6 @@ def scrollAboutPage(current_url, userid):
     # save webpage
     savepage("about", userid)
 
-    """
-    about = ['education', 'overview', 'living', 'contact-info', 'relationship', 'bio', 'year-overviews']
-    for sectionname in about:
-        about_url = current_url+'/about?section=%s&pnref=about' %(sectionname)
-        # open page based on url
-        driver.get(about_url)
-        # save webpage
-        savepage(sectionname, userid)
-        # rlog(userid, about_url)
-    """
 # rlog('timeline','success',startrow, userid)
 def rlog(type, status, i, userid):
     date = time.strftime('%Y%m%d',time.localtime(time.time()))
@@ -160,14 +150,14 @@ if __name__ == '__main__':
 
     # get userid from .csv file
     urls = []
-    samples = open('../FBCrawl/piTEDtranslate.csv','r')
+    samples = open('../FBCrawl/pifoodgroups.csv','r')
     # samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 8+5+1+1+1+3+1
-    endrow = startrow + 2
+    startrow = 1
+    endrow = 50
     # endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
