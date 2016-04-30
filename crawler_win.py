@@ -1,13 +1,20 @@
 import os
 import sys
 import socket
+import os.path
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 import datetime
 import time
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
+
+"""
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+"""
+
 # import BeautifulSoup
 # import json
 # from selenium.webdriver.common.action_chains import ActionChains
@@ -52,7 +59,7 @@ def scrollLikePage(current_url, userid):
         for i in range(1, 20):
             time.sleep(0.7)
             background.send_keys(Keys.SPACE)
-        savepage('likes', userid)
+    savepage('likes', userid)
     # rlog(userid, likes_url)
 
 def scrollTimelinePage(current_url, userid):
@@ -61,74 +68,61 @@ def scrollTimelinePage(current_url, userid):
     background = driver.find_element_by_css_selector("body")
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
-
-    """
-        # limit
-        # kalo g nemu yg tahun 2014 gimana?
-        <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_3_0_yearoverview" data-referrer="u_jsonp_3_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2015</div></div></div>
-        <div class="_4-u2 _2uo1 _3-95 _4-u8" id="u_jsonp_4_0_yearoverview" data-referrer="u_jsonp_4_0_yearoverview"><div class="_2pi6 _52jv"><i class="_3-94 img sp_GPqZJ_sO3wF sx_412bb0"></i><div class="_50f9 _50f6">Posts from 2014</div></div></div>
-        _4-u2 _2uo1 _3-95 _4-u8
-        //*[@id="u_jsonp_9_0_yearoverview"]/div/div -> tahun 2012
-        //*[@id="u_jsonp_8_0_yearoverview"]/div/div
-
-    """
+    scroll_start_time = time.time()
 
     # Prevent invalid page.
     try:
         driver.find_element_by_id('fb-timeline-cover-name')
     except Exception, e:
         # save these URLs
-        failed_file = open('failed_page.txt', 'a')
-        failed_file.write(url)
-        failed_file.write(str(Exception)+': '+str(e))
-        failed_file.close()
+        rlog('timeline',e,startrow, userid)
+
     try:
         # set default scrolllimit
-        scrolllimit = 1
+        scrolllimit = 4
         stop = False
         yearlimit = 2015
-
+        delay = 100
         while stop == False:
+            # do scrolling
             for i in range(1, scrolllimit):
                 background.send_keys(Keys.SPACE)
-                time.sleep(10)
-            # tag = driver.find_elements_by_tag_name('abbr')
-            # tag = driver.find_elements_by_xpath('//*[@id="u_0_1b"]/div[2]/div[1]/div[3]/div/div/div[2]/div/div/div[2]/div')
-            tag = driver.find_elements_by_css_selector('#timestampContent')
-            print tag.__len__()
-
+            time.sleep(2)
             """
-            <abbr title="Sunday, November 22, 2015 at 5:21pm" data-utime="1448241677" data-shorten="1" class="_5ptz"><span id="js_2" class="timestampContent">November 22, 2015</span></abbr>
-            another abbr
-            <abbr data-shorten="true" data-utime="1448212893" title="Monday, November 23, 2015 at 2:21am" class="livetimestamp">November 23, 2015 at 2:21am</abbr>
-            <abbr data-shorten="true" data-utime="1448216339" title="Monday, November 23, 2015 at 3:18am" class="livetimestamp">November 23, 2015 at 3:18am</abbr>
-
+            <img width="16" height="11" alt="" src="https://static.xx.fbcdn.net/rsrc.php/v2/yb/r/GsNJNwuI-UM.gif" class="ptl loadingIndicator img">
             """
+            # try:
+
+            # find elements by class
+            tag = driver.find_elements_by_css_selector('._5ptz')
             for x in range(0, tag.__len__()):
                 # pengen tau apa aja isinya abbr
                 print tag[x].get_attribute("title")
 
                 postyear = (tag[x].get_attribute("title")).split(" ")
-                if len(postyear) > 4:
-                    tahun = int(postyear[3])
-                # print postyear[3]
-                # quit()
+                tahun = int(postyear[3])
+                print tag[x].get_attribute("title")
                 print yearlimit <= tahun
                 if yearlimit <= tahun:
-                    # print "lanjut"
                     stop = False
                     scrolllimit += 1
                 else:
-                    # print "stop"
                     stop = True
 
-    except socket.timeout:
-        print "Exception Timeout: " + url
-        socket_timeout_file = open('socket_timeout.txt', 'a')
-        socket_timeout_file.write(url)
-        socket_timeout_file.close()
+            # WebDriverWait(driver, delay).until(EC.presence_of_element_located(driver.find_element_by_class_name('.loadingIndicator')))
+            print driver.find_element_by_class_name('.loadingIndicator')
+            """
+            finally:
+                rlog('timeline','too long to response',startrow, userid)
+                # driver.quit()
+            """
 
-    savepage('timeline', userid)
+
+        savepage('timeline', userid)
+    except socket.timeout:
+        rlog('timeline','socket timeout',startrow, userid)
+
+
     # rlog(userid, url)
 
 def scrollAboutPage(current_url, userid):
@@ -150,16 +144,22 @@ def scrollAboutPage(current_url, userid):
         savepage(sectionname, userid)
         # rlog(userid, about_url)
     """
-
-def rlog(i, userid):
+# rlog('timeline','success',startrow, userid)
+def rlog(type, status, i, userid):
     date = time.strftime('%Y%m%d',time.localtime(time.time()))
     # Record the start time.
     starttime = datetime.datetime.now()
     filename = "log_"+date+".txt"
-    # getfilename = fileexist(filename)
-    teks = "%s,%s,%s" % (i,userid,time)
-    # teks = str(i)+','+str(userid)+','str(time)
-    file = open(filename, "r+")
+    teks = "%s,%s,%s,%s,%s \n" % (type, status, starttime, i, userid)
+
+    # harus ada pengecekan fileexist atau ga
+    isExist = os.path.isfile(filename)
+    if isExist == True :
+        # kalo file exist
+        file = open(filename, "a")
+    else :
+        # kalo file not exist
+        file = open(filename, "w+")
     file.write(teks)
     file.close()
     return True
@@ -170,15 +170,14 @@ if __name__ == '__main__':
 
     # get userid from .csv file
     urls = []
-    samples = open('../FBCrawl/piTEDtranslate.csv','r')
-    # samples = open('D:\githubrepository\FBCrawl\piTEDtranslate.csv','r')
+    # samples = open('../FBCrawl/piTEDtranslate.csv','r')
+    samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 22+1+1+1+1+1+1+1
-    # endrow = readfile.__len__()
-    endrow = startrow+1
+    startrow = 8+5+1+1+1+3
+    endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
         getuserid = readfile[idx].split(',')[1]
@@ -191,7 +190,7 @@ if __name__ == '__main__':
     # driver init
     driver = webdriver.Firefox()
     # Set the timeout for the driver and socket.
-    driver.set_page_load_timeout(30)
+    # driver.set_page_load_timeout(30)
     socket.setdefaulttimeout(20)
 
     # First, login.
@@ -212,7 +211,9 @@ if __name__ == '__main__':
 
     # visit the url based on urls
     for userid in urls:
-        time.sleep(3)
+        url_cal += 1
+        time.sleep(1)
+
         url = baseurl+userid
         print(url)
         # you should know how long you scroll in this timeline - for set the timeout
@@ -226,8 +227,23 @@ if __name__ == '__main__':
         # tabs = ['timeline', 'likes', 'about']
         current_url = driver.current_url
 
-        scrollTimelinePage(current_url, userid)
-        scrollLikePage(current_url, userid)
-        scrollAboutPage(current_url, userid)
-        rlog(startrow, userid, )
-        continue
+        try:
+            scrollTimelinePage(current_url, userid)
+            rlog('timeline','success',startrow, userid)
+        except Exception, e:
+            rlog('timeline','failed',startrow, userid)
+            continue
+
+        try:
+            scrollLikePage(current_url, userid)
+            rlog('like','success',startrow, userid)
+        except Exception, e:
+            rlog('like','failed',startrow, userid)
+            continue
+
+        try:
+            scrollAboutPage(current_url, userid)
+            rlog('about','success',startrow, userid)
+        except Exception, e:
+            rlog('about','failed',startrow, userid)
+            continue
