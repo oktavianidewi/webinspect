@@ -30,11 +30,9 @@ def directoryexist(userid):
 
 def savepage(type, userid):
     # directory is based on userid
-    directory = userid
-
+    directory = userid.rstrip('\n')
     # checking directory
     checking = directoryexist(directory)
-
     page_html = driver.page_source
     page_html_file = open(directory+'/'+type+'_'+userid+'.html', 'w')
     page_html_file.write(page_html)
@@ -66,14 +64,13 @@ def scrollTimelinePage(current_url, userid):
     background = driver.find_element_by_css_selector("body")
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
-    scroll_start_time = time.time()
 
     # Prevent invalid page.
     try:
         driver.find_element_by_id('fb-timeline-cover-name')
     except Exception, e:
         # save these URLs
-        rlog('timeline',e,startrow, userid)
+        rlog('timeline','invalid page : %s ' %(e),0, userid)
 
     try:
         # set default scrolllimit
@@ -92,6 +89,13 @@ def scrollTimelinePage(current_url, userid):
 
             # find elements by class
             tag = driver.find_elements_by_css_selector('._5ptz')
+
+            # antisipasi kalo user punya banyak post
+            # antisipasi kalo user punya post banyak
+            if tag.__len__() > 350 :
+                stop = True
+            else:
+                stop = False
 
             # antisipasi post user sedikit dan tahunnya > yearlimit
             countOfMax = [a for a in recordOfTagNum if a == max(recordOfTagNum)]
@@ -122,10 +126,15 @@ def scrollTimelinePage(current_url, userid):
                 else:
                     stop = True
                 startTag = x+1
-
+        savepage('timeline', userid)
+        """
+        try:
             savepage('timeline', userid)
+        except Exception, e:
+            rlog('timeline','keterangan error: %s' %(e),startrow, userid)
+        """
     except TimeoutException:
-        rlog('timeline','timeout',startrow, userid)
+        rlog('timeline','keterangan timeout : %s' %(e),startrow, userid)
     # rlog(userid, url)
 
 def scrollAboutPage(current_url, userid):
@@ -137,16 +146,6 @@ def scrollAboutPage(current_url, userid):
     # save webpage
     savepage("about", userid)
 
-    """
-    about = ['education', 'overview', 'living', 'contact-info', 'relationship', 'bio', 'year-overviews']
-    for sectionname in about:
-        about_url = current_url+'/about?section=%s&pnref=about' %(sectionname)
-        # open page based on url
-        driver.get(about_url)
-        # save webpage
-        savepage(sectionname, userid)
-        # rlog(userid, about_url)
-    """
 # rlog('timeline','success',startrow, userid)
 def rlog(type, status, i, userid):
     date = time.strftime('%Y%m%d',time.localtime(time.time()))
@@ -189,16 +188,15 @@ if __name__ == '__main__':
     # get userid from .csv file
     urls = []
     # samples = open('../FBCrawl/piBfoodgroups.csv','r')
-    # samples = open('D:\githubrepository\FBCrawl\piBtraveladdiction.csv','r') # snitch
-    # samples = open('D:\githubrepository\FBCrawl\piBconstitutionalpatriot.csv','r') # quabbler
-    samples = open('D:\githubrepository\FBCrawl\piBTEDtranslate.csv','r')
+    # samples = open('../FBCrawl/piBTEDtranslate.csv','r')
+    samples = open('D:\githubrepository\FBCrawl\piBTEDTranslate.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
     # startrow = lastCheckedNum('log_20160501.txt')
     # startrow = lastCheckedNum('log_20160501.txt')
-    startrow = 8
+    startrow = 1
     endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         getuserid = readfile[idx]
@@ -206,12 +204,8 @@ if __name__ == '__main__':
 
     print "unique user : ", len(urls)
 
-    # url_cal for record how many url already visit in this login
-    url_cal = 0
-
     # driver init
     driver = webdriver.Firefox()
-    # driver = webdriver.Chrome('C:/chromedriver') # works in windows
     # Set the timeout for the driver and socket.
     driver.set_page_load_timeout(20)
     # socket.setdefaulttimeout(10)
@@ -233,17 +227,15 @@ if __name__ == '__main__':
         driver.close()
 
     # visit the url based on urls
-    for userid in urls:
-        url_cal += 1
+    for useridraw in urls:
         time.sleep(1)
 
+        userid = useridraw.rstrip('\n')
         url = baseurl+userid
         print(url)
         # you should know how long you scroll in this timeline - for set the timeout
         # Print the start time.
         print time.strftime('%Y-%m-%d %A %X %Z',time.localtime(time.time()))
-        # Record the start time.
-        starttime = datetime.datetime.now()
         # Wait 3 seconds for the browser loading the Webpage.
         # time.sleep(3)
 
@@ -256,17 +248,17 @@ if __name__ == '__main__':
             scrollTimelinePage(current_url, userid)
             rlog('timeline','success',idx, userid)
         except Exception, e:
-            rlog('timeline','failed',idx, userid)
+            rlog('timeline','failed : %s' %(e),idx, userid)
 
         try:
             scrollLikePage(current_url, userid)
             rlog('like','success',idx, userid)
         except Exception, e:
-            rlog('like','failed',idx, userid)
+            rlog('like','failed : %s' %(e),idx, userid)
 
         try:
             scrollAboutPage(current_url, userid)
             rlog('about','success',idx, userid)
         except Exception, e:
-            rlog('about','failed',idx, userid)
+            rlog('about','failed : %s' %(e),idx, userid)
             continue
