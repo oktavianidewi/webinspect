@@ -64,10 +64,13 @@ def scrollLikePage(current_url, userid):
 
 def scrollTimelinePage(current_url, userid):
     # browse the TIMELINE based on scrolllimit
+    # Go to the target's timeline Webpage.
     driver.get(url)
+    # For scroll the page: send_keys(Keys.SPACE)
     background = driver.find_element_by_css_selector("body")
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
+    scroll_start_time = time.time()
 
     # Prevent invalid page.
     try:
@@ -81,13 +84,12 @@ def scrollTimelinePage(current_url, userid):
         scrolllimit = 4
         stop = False
         yearlimit = 2015
-        # delay = 100
-        sleeptime = 3
+        delay = 100
         while stop == False:
             # do scrolling
             for i in range(1, scrolllimit):
                 background.send_keys(Keys.SPACE)
-            time.sleep(sleeptime)
+            time.sleep(2)
             """
             <img width="16" height="11" alt="" src="https://static.xx.fbcdn.net/rsrc.php/v2/yb/r/GsNJNwuI-UM.gif" class="ptl loadingIndicator img">
             """
@@ -96,19 +98,26 @@ def scrollTimelinePage(current_url, userid):
             # find elements by class
             tag = driver.find_elements_by_css_selector('._5ptz')
             for x in range(0, tag.__len__()):
-                # pengen tau apa aja isinya abbr
-                print tag[x].get_attribute("title")
-
                 postyear = (tag[x].get_attribute("title")).split(" ")
                 tahun = int(postyear[3])
                 print tag[x].get_attribute("title")
                 print yearlimit <= tahun
                 if yearlimit <= tahun:
                     stop = False
-                    # sleeptime += 2
+                    scrolllimit += 1
                 else:
                     stop = True
-            savepage('timeline', userid)
+
+            # WebDriverWait(driver, delay).until(EC.presence_of_element_located(driver.find_element_by_class_name('.loadingIndicator')))
+            print driver.find_element_by_class_name('.loadingIndicator')
+            """
+            finally:
+                rlog('timeline','too long to response',startrow, userid)
+                # driver.quit()
+            """
+
+
+        savepage('timeline', userid)
     except socket.timeout:
         rlog('timeline','socket timeout',startrow, userid)
 
@@ -124,6 +133,16 @@ def scrollAboutPage(current_url, userid):
     # save webpage
     savepage("about", userid)
 
+    """
+    about = ['education', 'overview', 'living', 'contact-info', 'relationship', 'bio', 'year-overviews']
+    for sectionname in about:
+        about_url = current_url+'/about?section=%s&pnref=about' %(sectionname)
+        # open page based on url
+        driver.get(about_url)
+        # save webpage
+        savepage(sectionname, userid)
+        # rlog(userid, about_url)
+    """
 # rlog('timeline','success',startrow, userid)
 def rlog(type, status, i, userid):
     date = time.strftime('%Y%m%d',time.localtime(time.time()))
@@ -150,15 +169,14 @@ if __name__ == '__main__':
 
     # get userid from .csv file
     urls = []
-    samples = open('../FBCrawl/pifoodgroups.csv','r')
-    # samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
+    # samples = open('../FBCrawl/piTEDtranslate.csv','r')
+    samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 1
-    endrow = 50
-    # endrow = readfile.__len__()
+    startrow = 8+5+1+1+1+3
+    endrow = readfile.__len__()
     for idx in range(startrow, endrow):
         # urls.append(baseurl+readfile[idx].split(',')[1])
         getuserid = readfile[idx].split(',')[1]
@@ -168,8 +186,12 @@ if __name__ == '__main__':
 
     print "unique user : ", len(urls)
 
+    # url_cal for record how many url already visit in this login
+    url_cal = 0
+
     # driver init
     driver = webdriver.Firefox()
+    # driver = webdriver.Chrome('C:/chromedriver') # works in windows
     # Set the timeout for the driver and socket.
     # driver.set_page_load_timeout(30)
     socket.setdefaulttimeout(20)
@@ -192,6 +214,7 @@ if __name__ == '__main__':
 
     # visit the url based on urls
     for userid in urls:
+        url_cal += 1
         time.sleep(1)
 
         url = baseurl+userid
@@ -199,6 +222,8 @@ if __name__ == '__main__':
         # you should know how long you scroll in this timeline - for set the timeout
         # Print the start time.
         print time.strftime('%Y-%m-%d %A %X %Z',time.localtime(time.time()))
+        # Record the start time.
+        starttime = datetime.datetime.now()
         # Wait 3 seconds for the browser loading the Webpage.
         # time.sleep(3)
 
@@ -212,12 +237,14 @@ if __name__ == '__main__':
             rlog('timeline','success',startrow, userid)
         except Exception, e:
             rlog('timeline','failed',startrow, userid)
+            continue
 
         try:
             scrollLikePage(current_url, userid)
             rlog('like','success',startrow, userid)
         except Exception, e:
             rlog('like','failed',startrow, userid)
+            continue
 
         try:
             scrollAboutPage(current_url, userid)
