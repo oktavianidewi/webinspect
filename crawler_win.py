@@ -8,11 +8,11 @@ from selenium.common.exceptions import NoSuchElementException
 import datetime
 import time
 
-"""
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+"""
 """
 
 # import BeautifulSoup
@@ -63,8 +63,6 @@ def scrollLikePage(current_url, userid):
     # rlog(userid, likes_url)
 
 def scrollTimelinePage(current_url, userid):
-    # browse the TIMELINE based on scrolllimit
-    driver.get(url)
     background = driver.find_element_by_css_selector("body")
     # Better to stop here. Or it may have exception at background.send_keys(Keys.SPACE).
     # time.sleep(3)
@@ -81,38 +79,52 @@ def scrollTimelinePage(current_url, userid):
         scrolllimit = 4
         stop = False
         yearlimit = 2015
-        # delay = 100
+        startTag = 0
+        recordOfTagNum = []
         sleeptime = 3
-        while stop == False:
+        constantlength = False
+        while (stop == False and constantlength == False):
             # do scrolling
             for i in range(1, scrolllimit):
                 background.send_keys(Keys.SPACE)
             time.sleep(sleeptime)
-            """
-            <img width="16" height="11" alt="" src="https://static.xx.fbcdn.net/rsrc.php/v2/yb/r/GsNJNwuI-UM.gif" class="ptl loadingIndicator img">
-            """
-            # try:
 
             # find elements by class
             tag = driver.find_elements_by_css_selector('._5ptz')
-            for x in range(0, tag.__len__()):
-                # pengen tau apa aja isinya abbr
-                print tag[x].get_attribute("title")
 
+            # antisipasi post user sedikit dan tahunnya > yearlimit
+            countOfMax = [a for a in recordOfTagNum if a == max(recordOfTagNum)]
+            recordOfTagNum.append(tag.__len__())
+            if len(recordOfTagNum) > 5:
+                print recordOfTagNum
+                # compare
+                # True and True
+                if (recordOfTagNum[0] == recordOfTagNum[recordOfTagNum.index(max(recordOfTagNum))]) and (len(countOfMax) > 10) :
+                    constantlength = True
+                elif (recordOfTagNum[0] != recordOfTagNum[recordOfTagNum.index(max(recordOfTagNum))]) and (len(countOfMax) > 10) :
+                    constantlength = True
+                elif (recordOfTagNum[0] == recordOfTagNum[recordOfTagNum.index(max(recordOfTagNum))]) and (len(countOfMax) < 10) :
+                    constantlength = True
+                else:
+                    constantlength = False
+
+            # antisipasi kalo loading tiba2 berhenti
+
+            # nilai start dinamis
+            for x in range(startTag, tag.__len__()):
                 postyear = (tag[x].get_attribute("title")).split(" ")
                 tahun = int(postyear[3])
                 print tag[x].get_attribute("title")
-                print yearlimit <= tahun
+                print x
                 if yearlimit <= tahun:
                     stop = False
-                    # sleeptime += 2
                 else:
                     stop = True
+                startTag = x+1
+
             savepage('timeline', userid)
-    except socket.timeout:
-        rlog('timeline','socket timeout',startrow, userid)
-
-
+    except TimeoutException:
+        rlog('timeline','timeout',startrow, userid)
     # rlog(userid, url)
 
 def scrollAboutPage(current_url, userid):
@@ -144,35 +156,49 @@ def rlog(type, status, i, userid):
     file.close()
     return True
 
+def lastCheckedNum(logfilename):
+    # menentukan startrow dari file log
+    checkeduser = []
+    with open(logfilename, 'r') as row:
+        x = row.readlines()
+        if len(x) > 1:
+            for baris in x:
+                row = baris.split(',')[3]
+                if row not in checkeduser:
+                    checkeduser.append(row)
+            start = max(checkeduser)
+        else:
+            start = 1
+    return start
+
 if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf-8')
 
     # get userid from .csv file
     urls = []
-    samples = open('../FBCrawl/pifoodgroups.csv','r')
+    samples = open('../FBCrawl/piBfoodgroups.csv','r')
+    # samples = open('../FBCrawl/piBTEDtranslate.csv','r')
     # samples = open('D:\githubrepository\FBCrawl\pitraveladdiction.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
 
     # filter unique user
-    startrow = 1
-    endrow = 50
-    # endrow = readfile.__len__()
+    # startrow = lastCheckedNum('log_20160501.txt')
+    # startrow = lastCheckedNum('log_20160501.txt')
+    startrow = 8
+    endrow = readfile.__len__()
     for idx in range(startrow, endrow):
-        # urls.append(baseurl+readfile[idx].split(',')[1])
-        getuserid = readfile[idx].split(',')[1]
-
-        if getuserid not in urls:
-            urls.append(getuserid)
+        getuserid = readfile[idx]
+        urls.append(getuserid)
 
     print "unique user : ", len(urls)
 
     # driver init
     driver = webdriver.Firefox()
     # Set the timeout for the driver and socket.
-    # driver.set_page_load_timeout(30)
-    socket.setdefaulttimeout(20)
+    driver.set_page_load_timeout(20)
+    # socket.setdefaulttimeout(10)
 
     # First, login.
     driver.get("https://www.facebook.com/login.php")
@@ -209,19 +235,19 @@ if __name__ == '__main__':
 
         try:
             scrollTimelinePage(current_url, userid)
-            rlog('timeline','success',startrow, userid)
+            rlog('timeline','success',idx, userid)
         except Exception, e:
-            rlog('timeline','failed',startrow, userid)
+            rlog('timeline','failed',idx, userid)
 
         try:
             scrollLikePage(current_url, userid)
-            rlog('like','success',startrow, userid)
+            rlog('like','success',idx, userid)
         except Exception, e:
-            rlog('like','failed',startrow, userid)
+            rlog('like','failed',idx, userid)
 
         try:
             scrollAboutPage(current_url, userid)
-            rlog('about','success',startrow, userid)
+            rlog('about','success',idx, userid)
         except Exception, e:
-            rlog('about','failed',startrow, userid)
+            rlog('about','failed',idx, userid)
             continue
