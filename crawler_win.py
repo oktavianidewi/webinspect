@@ -189,8 +189,8 @@ if __name__ == '__main__':
     # get userid from .csv file
     urls = []
     # samples = open('../FBCrawl/piBfoodgroups.csv','r')
-    # samples = open('../FBCrawl/piBTEDtranslate.csv','r')
-    # samples = open('D:\githubrepository\FBCrawl\piBtraveladdiction.csv','r')
+    # samples = open('D:\githubrepository\FBCrawl\piBtraveladdiction.csv','r') # snitch
+    # samples = open('D:\githubrepository\FBCrawl\piBconstitutionalpatriot.csv','r') # quabbler
     samples = open('D:\githubrepository\FBCrawl\piBTEDtranslate.csv','r')
     readfile = samples.readlines()
     baseurl = 'www.facebook.com/'
