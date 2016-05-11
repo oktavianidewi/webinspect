@@ -1,6 +1,7 @@
 import json
 import nltk
 import os
+import string
 
 ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words('english'))
 NON_ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words()) - ENGLISH_STOPWORDS
@@ -15,25 +16,31 @@ def is_english(text):
     text = text.lower()
     words = set(nltk.wordpunct_tokenize(text))
     stopwordsdetection = len(words & ENGLISH_STOPWORDS) > len(words & NON_ENGLISH_STOPWORDS)
-    """
-    if not stopwordsdetection:
-        # text = userpost[12].split(" ")
-        textsplit = text.split(" ")
-        text_vocab = set(w.lower() for w in textsplit if w.lower().isalpha())
-        unusual = text_vocab.difference(english_vocab)
-        # print text_vocab
-        if len(unusual) < len(textsplit) :
-            stopwordsdetection = True
-        else:
-            stopwordsdetection = False
-    """
+
+    if not text:
+        # print 'kosong'
+        stopwordsdetection = False
+    else:
+        if not stopwordsdetection:
+            textsplit = text.split(" ")
+            # text_vocab = set(w.lower() for w in textsplit if w.lower().isalpha())
+            text_vocab = set(" ".join("".join([" " if ch in string.punctuation else ch for ch in text.lower()]).split()).split())
+            unusual = text_vocab.difference(english_vocab)
+            usual = len(text_vocab)-len(unusual)
+            if len(unusual) <= usual :
+                stopwordsdetection = True
+            else:
+                stopwordsdetection = False
+    # print stopwordsdetection, text
     return stopwordsdetection
 
 
 # open file
 # filename = 'infotes.json'
+filename = 'info_foodgroups.json'
+# filename = 'info_piBconstitutionalpatriot.json'
 # filename = 'info_piBTEDTranslate.json'
-filename = 'info_piBtraveladdiction.json'
+# filename = 'info_piBtraveladdiction.json'
 with open(filename) as file:
     data = json.load(file)
 
@@ -78,7 +85,6 @@ def getTimeline(*userID):
 
 english_non_details = {}
 def detectLanguageFromUserPosts(userID):
-
     # checking english post atau bukan?
     userposts = data[userID]['timeline']
     numOfEnglishPost = 0
@@ -91,7 +97,7 @@ def detectLanguageFromUserPosts(userID):
             numOfEnglishPost += 1
     # print numOfEnglishPost, len(userposts)
     numOfUserPost = len(userposts)
-    if numOfEnglishPost > numOfUserPost/2:
+    if numOfEnglishPost > 20:
         status = 'English'
     else:
         status = 'Non-English'
@@ -102,8 +108,10 @@ def checkValidUser():
     pass
 
 def writeToFile(data):
-    filename = "english_non_piBtraveladdiction.json"
+    # filename = "english_non_piBtraveladdiction.json"
     # filename = "english_non_piBTEDTranslate.json"
+    # filename = "english_non_piBconstitutionalpatriot.json"
+    filename = "english_non_piBfoodgroup1.json"
     # filename = "english_non_infotes.json"
     # harus ada pengecekan fileexist atau ga
     isExist = os.path.isfile(filename)
@@ -128,5 +136,6 @@ for userid in data:
         if result['status'] == 'English':
             numOfEnglishPostUser += 1
     resultToWrite.append(result)
-writeToFile(resultToWrite)
+# writeToFile(resultToWrite)
+print resultToWrite
 print "numOfEnglishPostUser : ", numOfEnglishPostUser
