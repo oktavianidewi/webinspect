@@ -1,5 +1,6 @@
 import json
 import nltk
+import os
 
 ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words('english'))
 NON_ENGLISH_STOPWORDS = set(nltk.corpus.stopwords.words()) - ENGLISH_STOPWORDS
@@ -14,7 +15,7 @@ def is_english(text):
     text = text.lower()
     words = set(nltk.wordpunct_tokenize(text))
     stopwordsdetection = len(words & ENGLISH_STOPWORDS) > len(words & NON_ENGLISH_STOPWORDS)
-
+    """
     if not stopwordsdetection:
         # text = userpost[12].split(" ")
         textsplit = text.split(" ")
@@ -25,11 +26,14 @@ def is_english(text):
             stopwordsdetection = True
         else:
             stopwordsdetection = False
+    """
     return stopwordsdetection
 
 
 # open file
-with open('infotes.json') as file:
+# filename = 'infotes.json'
+filename = 'info_piBTEDTranslate.json'
+with open(filename) as file:
     data = json.load(file)
 
 def countUserdID():
@@ -71,29 +75,56 @@ def getAbout(*userID):
 def getTimeline(*userID):
     pass
 
-# get all timeline data
-"""
-for userid in data:
-    if userid != 'Store':
-        print userid
-        print data[userid]['timeline']
-"""
-
+english_non_details = {}
 def detectLanguageFromUserPosts(userID):
+
     # checking english post atau bukan?
     userposts = data[userID]['timeline']
     numOfEnglishPost = 0
     for userpost in userposts:
         # index 12 is for posts
         stopwordsdetection = is_english(userpost[12])
-        if stopwordsdetection :
+        # print userpost[12]
+        # print stopwordsdetection
+        if stopwordsdetection:
             numOfEnglishPost += 1
-    if numOfEnglishPost > len(userposts)/2:
+    # print numOfEnglishPost, len(userposts)
+    numOfUserPost = len(userposts)
+    if numOfEnglishPost > numOfUserPost/2:
         status = 'English'
     else:
         status = 'Non-English'
-    return status
+    return {"userid":userID,"status":status,"englishpost":numOfEnglishPost,"totalpost":numOfUserPost}
+    # return status
 
 def checkValidUser():
     pass
 
+def writeToFile(data):
+    filename = "english_non_piBTEDTranslate.json"
+    # filename = "english_non_infotes.json"
+    # harus ada pengecekan fileexist atau ga
+    isExist = os.path.isfile(filename)
+    if isExist == True :
+        # kalo file exist
+        file = open(filename, "a")
+    else :
+        # kalo file not exist
+        file = open(filename, "w+")
+    file.write(json.dumps(data))
+    file.close()
+    return True
+
+resultToWrite = []
+numOfEnglishPostUser = 0
+# get all timeline data
+for userid in data:
+    if userid != 'Store':
+        print userid
+        # english_non[userid] = detectLanguageFromUserPosts(userid)
+        result = detectLanguageFromUserPosts(userid)
+        if result['status'] == 'English':
+            numOfEnglishPostUser += 1
+    resultToWrite.append(result)
+writeToFile(resultToWrite)
+print "numOfEnglishPostUser : ", numOfEnglishPostUser
